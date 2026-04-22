@@ -1,0 +1,13 @@
+# Supabase Configuration
+# This file is required for deploying edge functions
+
+[api]
+enabled = true
+port = 54321
+max_rows = 1000
+
+[db]
+port = 54322
+
+[functions.make-server-42111711]
+verify_jwt = false
