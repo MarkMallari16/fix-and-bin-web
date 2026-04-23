@@ -45,17 +45,17 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
               className="group flex items-center gap-2 text-2xl font-bold text-blue-600 hover:text-blue-700 transition-all transform hover:scale-105 cursor-pointer"
               title="Go to Home"
             >
-              <svg 
-                className="w-8 h-8 transition-transform group-hover:rotate-12" 
-                viewBox="0 0 24 24" 
-                fill="none" 
+              <svg
+                className="w-8 h-8 transition-transform group-hover:rotate-12"
+                viewBox="0 0 24 24"
+                fill="none"
                 stroke="currentColor"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
               <span className="relative">
@@ -63,14 +63,14 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
               </span>
             </button>
-            
+
             {/* Supabase Status Indicator */}
             <SupabaseStatus />
           </div>
-          
+
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex space-x-8">
-            <button 
+            <button
               onClick={() => {
                 onViewChange('workers');
                 handleClearSearch();
@@ -80,7 +80,7 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
               Workers
             </button>
             {isAuthenticated && (
-              <button 
+              <button
                 onClick={() => {
                   onViewChange('messages');
                   handleClearSearch();
@@ -93,7 +93,7 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
             )}
             {isAuthenticated && user?.role === 'worker' && (
               <>
-                <button 
+                <button
                   onClick={() => {
                     onViewChange('worker-dashboard');
                     handleClearSearch();
@@ -102,7 +102,7 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
                 >
                   Dashboard
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     onViewChange('tracker');
                     handleClearSearch();
@@ -114,7 +114,7 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
               </>
             )}
             {isAuthenticated && user?.role === 'customer' && (
-              <button 
+              <button
                 onClick={() => {
                   onViewChange('my-ticket');
                   handleClearSearch();
@@ -125,7 +125,7 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
               </button>
             )}
           </nav>
-          
+
           <div className="flex items-center space-x-4">
             {/* Search Button */}
             <button
@@ -140,7 +140,7 @@ export function Header({ onLoginClick, onRegisterClick, currentView, onViewChang
               <Phone className="w-5 h-5 mr-2" />
               <span className="hidden md:inline">(123) 456-7890</span>
             </a>
-            
+
             {isAuthenticated ? (
               <div className="flex items-center space-x-2 md:space-x-4">
                 <button
