@@ -6,7 +6,7 @@ interface FooterProps {
 
 export function Footer({ onViewChange }: FooterProps) {
   return (
-    <footer className="bg-gray-900 text-white py-12">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
@@ -181,7 +181,7 @@ export function Footer({ onViewChange }: FooterProps) {
               </li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="font-bold mb-4">Follow Us</h4>
             <div className="flex space-x-4">

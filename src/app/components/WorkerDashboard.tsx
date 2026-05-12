@@ -7,7 +7,6 @@ import {
   DollarSign,
   Star,
   MessageSquare,
-  Phone,
   AlertCircle,
   TrendingUp,
   Package,
@@ -75,7 +74,11 @@ const mockJobs: Job[] = [
   }
 ];
 
-export function WorkerDashboard() {
+interface WorkerDashboardProps {
+  onNavigateToMessages?: () => void;
+}
+
+export function WorkerDashboard({ onNavigateToMessages }: WorkerDashboardProps = {}) {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<Job[]>(mockJobs);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -322,15 +325,10 @@ export function WorkerDashboard() {
                     </button>
                   )}
 
-                  <a
-                    href={`tel:${job.customer.phone}`}
-                    className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2"
+                  <button
+                    onClick={onNavigateToMessages}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
                   >
-                    <Phone className="w-5 h-5" />
-                    Call
-                  </a>
-
-                  <button className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2">
                     <MessageSquare className="w-5 h-5" />
                     Message
                   </button>

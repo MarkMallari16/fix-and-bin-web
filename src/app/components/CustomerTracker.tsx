@@ -1,16 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  MapPin, 
-  Phone, 
-  MessageSquare, 
-  Clock, 
-  CheckCircle, 
+import {
+  MapPin,
+  MessageSquare,
+  Clock,
+  CheckCircle,
   Truck,
-  User,
   Star,
-  Navigation,
-  Package,
-  AlertCircle
+  Navigation
 } from 'lucide-react';
 
 interface ServiceTicket {
@@ -73,7 +69,11 @@ const mockTicket: ServiceTicket = {
   }
 };
 
-export function CustomerTracker() {
+interface CustomerTrackerProps {
+  onNavigateToMessages?: () => void;
+}
+
+export function CustomerTracker({ onNavigateToMessages }: CustomerTrackerProps = {}) {
   const [ticket] = useState<ServiceTicket>(mockTicket);
   const [liveUpdates, setLiveUpdates] = useState(true);
   const [simulatedDistance, setSimulatedDistance] = useState(1.2);
@@ -94,13 +94,8 @@ export function CustomerTracker() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'on-the-way': return 'bg-purple-100 text-purple-800 border-purple-300';
-      case 'arrived': return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'in-progress': return 'bg-indigo-100 text-indigo-800 border-indigo-300';
-      case 'completed': return 'bg-green-100 text-green-800 border-green-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      case 'completed': return 'text-green-700';
+      default: return 'text-blue-600';
     }
   };
 
@@ -109,9 +104,9 @@ export function CustomerTracker() {
       case 'pending': return 'Waiting for worker assignment';
       case 'confirmed': return 'Your service has been confirmed';
       case 'on-the-way': return 'Worker is on the way to your location';
-      case 'arrived': return 'Worker has arrived at your location';
-      case 'in-progress': return 'Work is currently in progress';
-      case 'completed': return 'Service completed successfully';
+      case 'arrived': return 'Worker has arrived';
+      case 'in-progress': return 'Work in progress';
+      case 'completed': return 'Service completed';
       default: return 'Processing your request';
     }
   };
@@ -129,168 +124,148 @@ export function CustomerTracker() {
   };
 
   return (
-    <section className="py-12 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-8 bg-gray-50 min-h-screen">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-4xl font-bold text-gray-900">Track Your Service</h1>
-            {liveUpdates && ticket.status === 'on-the-way' && (
-              <div className="flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="font-medium text-sm">Live Tracking</span>
-              </div>
-            )}
-          </div>
-          <p className="text-xl text-gray-600">Ticket #{ticket.id}</p>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Track Service</h1>
+          <p className="text-sm text-gray-600">#{ticket.id}</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Status Card */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className={`flex items-center gap-3 p-4 rounded-lg border-2 mb-4 ${getStatusColor(ticket.status)}`}>
-                {ticket.status === 'on-the-way' && <Truck className="w-6 h-6" />}
-                {ticket.status === 'completed' && <CheckCircle className="w-6 h-6" />}
-                {ticket.status === 'in-progress' && <Package className="w-6 h-6 animate-pulse" />}
-                {ticket.status === 'confirmed' && <CheckCircle className="w-6 h-6" />}
-                {ticket.status === 'pending' && <Clock className="w-6 h-6" />}
-                {ticket.status === 'arrived' && <MapPin className="w-6 h-6" />}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              {/* Status */}
+              <div className="flex items-center gap-3 mb-4">
+                {ticket.status === 'on-the-way' && <Truck className={`w-6 h-6 ${getStatusColor(ticket.status)}`} />}
+                {ticket.status === 'completed' && <CheckCircle className={`w-6 h-6 ${getStatusColor(ticket.status)}`} />}
+                {ticket.status === 'in-progress' && <Clock className={`w-6 h-6 ${getStatusColor(ticket.status)}`} />}
+                {ticket.status === 'confirmed' && <CheckCircle className={`w-6 h-6 ${getStatusColor(ticket.status)}`} />}
+                {ticket.status === 'pending' && <Clock className={`w-6 h-6 ${getStatusColor(ticket.status)}`} />}
+                {ticket.status === 'arrived' && <MapPin className={`w-6 h-6 ${getStatusColor(ticket.status)}`} />}
                 <div className="flex-1">
-                  <p className="font-bold text-lg uppercase">{ticket.status.replace('-', ' ')}</p>
-                  <p className="text-sm opacity-90">{getStatusMessage(ticket.status)}</p>
+                  <p className={`text-lg font-bold ${getStatusColor(ticket.status)}`}>
+                    {ticket.status.replace('-', ' ').toUpperCase()}
+                  </p>
+                  <p className="text-sm text-gray-600">{getStatusMessage(ticket.status)}</p>
                 </div>
+                {liveUpdates && ticket.status === 'on-the-way' && (
+                  <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Live
+                  </div>
+                )}
               </div>
 
               {/* Progress Bar */}
               <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Service Progress</span>
-                  <span className="font-bold">{getProgressPercentage(ticket.status)}%</span>
+                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                  <span>Progress</span>
+                  <span className="font-medium">{getProgressPercentage(ticket.status)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 relative overflow-hidden"
+                <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-500"
                     style={{ width: `${getProgressPercentage(ticket.status)}%` }}
-                  >
-                    <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                  </div>
+                  />
                 </div>
               </div>
 
               {/* Live Location Tracking */}
               {ticket.status === 'on-the-way' && ticket.currentLocation && (
-                <div className="mb-6 p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Navigation className="w-5 h-5 text-purple-600" />
-                    <h3 className="font-bold text-gray-900">Live Location</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="text-center p-3 bg-white rounded-lg">
-                      <p className="text-sm text-gray-600 mb-1">Distance Away</p>
-                      <p className="text-2xl font-bold text-purple-600">{simulatedDistance} km</p>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 mb-1">Distance</p>
+                      <p className="text-2xl font-bold text-gray-900">{simulatedDistance} km</p>
                     </div>
-                    <div className="text-center p-3 bg-white rounded-lg">
-                      <p className="text-sm text-gray-600 mb-1">Estimated Arrival</p>
-                      <p className="text-2xl font-bold text-purple-600">{ticket.estimatedArrival}</p>
+                    <div className="w-px h-12 bg-gray-200"></div>
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 mb-1">Estimated Arrival</p>
+                      <p className="text-2xl font-bold text-gray-900">{ticket.estimatedArrival}</p>
                     </div>
                   </div>
-                  
+
                   {/* Simulated Map */}
-                  <div className="relative h-48 bg-gray-200 rounded-lg overflow-hidden">
-                    <img 
+                  <div className="relative h-40 bg-gray-100 rounded-lg overflow-hidden">
+                    <img
                       src="https://images.unsplash.com/photo-1579120632007-f493373daed0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZWxpdmVyeSUyMHRydWNrJTIwbWFwJTIwbG9jYXRpb258ZW58MXx8fHwxNzcyNzA3MzEwfDA&ixlib=rb-4.1.0&q=80&w=1080"
                       alt="Map"
-                      className="w-full h-full object-cover opacity-60"
+                      className="w-full h-full object-cover opacity-40"
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2">
-                        <Truck className="w-5 h-5 text-purple-600 animate-bounce" />
-                        <span className="font-bold text-gray-900">Worker is approaching...</span>
+                      <div className="bg-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2">
+                        <Truck className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-900">Worker approaching</span>
                       </div>
-                    </div>
-                    {/* Destination Pin */}
-                    <div className="absolute bottom-4 right-4 bg-red-500 p-2 rounded-full shadow-lg">
-                      <MapPin className="w-5 h-5 text-white" />
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Service Details */}
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-2">Service Details</h3>
-                  <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Service:</span>
-                      <span className="font-medium text-gray-900">{ticket.service}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Scheduled:</span>
-                      <span className="font-medium text-gray-900">
-                        {new Date(ticket.scheduledDate).toLocaleDateString()} at {ticket.scheduledTime}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Service Fee:</span>
-                      <span className="text-2xl font-bold text-blue-600">{ticket.amount}</span>
-                    </div>
+              <div className="space-y-3">
+                <div className="flex justify-between py-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Service</span>
+                  <span className="text-sm font-medium text-gray-900">{ticket.service}</span>
+                </div>
+                <div className="flex justify-between py-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Scheduled</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {new Date(ticket.scheduledDate).toLocaleDateString()} • {ticket.scheduledTime}
+                  </span>
+                </div>
+                <div className="flex justify-between py-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Service Fee</span>
+                  <span className="text-lg font-bold text-blue-600">{ticket.amount}</span>
+                </div>
+                <div className="flex items-start gap-3 py-3 border-b border-gray-100">
+                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Service Address</p>
+                    <p className="text-sm text-gray-900">{ticket.address}</p>
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-2">Service Address</h3>
-                  <div className="p-4 bg-gray-50 rounded-lg flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <span className="text-gray-700">{ticket.address}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-2">Description</h3>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-gray-700">{ticket.description}</p>
-                  </div>
+                <div className="py-3">
+                  <p className="text-xs text-gray-500 mb-2">Issue Description</p>
+                  <p className="text-sm text-gray-700">{ticket.description}</p>
                 </div>
               </div>
             </div>
 
             {/* Timeline */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-bold text-gray-900 mb-6 flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-blue-600" />
-                Service Timeline
-              </h3>
-              <div className="space-y-4">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-sm font-bold text-gray-900 mb-4">Service Timeline</h3>
+              <div className="space-y-3">
                 {ticket.timeline.map((item, index) => (
-                  <div key={index} className="flex gap-4">
+                  <div key={index} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        item.completed 
-                          ? 'bg-green-500' 
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                        item.completed
+                          ? 'bg-green-500'
                           : index === ticket.timeline.findIndex(t => !t.completed)
-                          ? 'bg-blue-500 animate-pulse'
-                          : 'bg-gray-300'
+                          ? 'bg-blue-600'
+                          : 'bg-gray-200'
                       }`}>
                         {item.completed ? (
-                          <CheckCircle className="w-5 h-5 text-white" />
+                          <CheckCircle className="w-4 h-4 text-white" />
                         ) : (
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                         )}
                       </div>
                       {index < ticket.timeline.length - 1 && (
-                        <div className={`w-0.5 h-12 ${
-                          item.completed ? 'bg-green-500' : 'bg-gray-300'
+                        <div className={`w-px h-8 ${
+                          item.completed ? 'bg-green-500' : 'bg-gray-200'
                         }`} />
                       )}
                     </div>
-                    <div className="flex-1 pb-4">
-                      <p className={`font-medium ${item.completed ? 'text-gray-900' : 'text-gray-500'}`}>
+                    <div className="flex-1 pb-2">
+                      <p className={`text-sm font-medium ${item.completed ? 'text-gray-900' : 'text-gray-400'}`}>
                         {item.status}
                       </p>
-                      <p className="text-sm text-gray-600">{item.time}</p>
+                      <p className="text-xs text-gray-500">{item.time}</p>
                     </div>
                   </div>
                 ))}
@@ -299,63 +274,57 @@ export function CustomerTracker() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4">
             {/* Worker Info */}
             {ticket.worker && (
-              <div className="bg-white rounded-lg shadow-lg p-6 sticky top-24">
-                <h3 className="font-bold text-gray-900 mb-4">Your Technician</h3>
+              <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
+                <h3 className="text-sm font-bold text-gray-900 mb-4">Your Technician</h3>
                 <div className="text-center mb-4">
-                  <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-4 border-blue-100">
-                    <img 
-                      src={ticket.worker.photo} 
+                  <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden">
+                    <img
+                      src={ticket.worker.photo}
                       alt={ticket.worker.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <h4 className="font-bold text-lg text-gray-900">{ticket.worker.name}</h4>
-                  <div className="flex items-center justify-center gap-1 mt-2">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-bold text-gray-900">{ticket.worker.rating}</span>
-                    <span className="text-gray-600 text-sm">({ticket.worker.completedJobs} jobs)</span>
+                  <h4 className="font-bold text-base text-gray-900 mb-1">{ticket.worker.name}</h4>
+                  <div className="flex items-center justify-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm font-medium text-gray-900">{ticket.worker.rating}</span>
+                    <span className="text-xs text-gray-500">• {ticket.worker.completedJobs} jobs</span>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <button className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2">
-                    <Phone className="w-5 h-5" />
-                    Call Worker
-                  </button>
-                  <button className="w-full bg-white text-blue-600 border-2 border-blue-600 px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center justify-center gap-2">
-                    <MessageSquare className="w-5 h-5" />
-                    Send Message
-                  </button>
-                </div>
+                <button
+                  onClick={onNavigateToMessages}
+                  className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Message
+                </button>
 
                 {/* Worker Stats */}
-                <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-2 gap-4 text-center">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">{ticket.worker.completedJobs}</p>
-                    <p className="text-xs text-gray-600">Jobs Done</p>
+                <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-3">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-gray-900">{ticket.worker.completedJobs}</p>
+                    <p className="text-xs text-gray-500">Jobs</p>
                   </div>
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <p className="text-2xl font-bold text-green-600">98%</p>
-                    <p className="text-xs text-gray-600">Success Rate</p>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-green-600">98%</p>
+                    <p className="text-xs text-gray-500">Success</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Help & Support */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-bold text-gray-900 mb-4 flex items-center">
-                <AlertCircle className="w-5 h-5 mr-2 text-blue-600" />
-                Need Help?
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Our customer support team is available 24/7 to assist you.
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-sm font-bold text-gray-900 mb-2">Need Help?</h3>
+              <p className="text-xs text-gray-600 mb-4">
+                Customer support available 24/7
               </p>
-              <button className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2">
-                <Phone className="w-5 h-5" />
+              <button className="w-full bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+                <MessageSquare className="w-4 h-4" />
                 Contact Support
               </button>
             </div>

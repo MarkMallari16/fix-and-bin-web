@@ -43,13 +43,17 @@ const services = [
   }
 ];
 
-export function Services() {
+interface ServicesProps {
+  onBookService?: () => void;
+}
+
+export function Services({ onBookService }: ServicesProps = {}) {
   return (
-    <section id="services" className="py-20 bg-white">
+    <section id="services" className="py-20 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Services</h2>
-          <p className="text-xl text-gray-600">Comprehensive handyman solutions for your home and business</p>
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Our Services</h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300">Comprehensive handyman solutions for your home and business</p>
         </div>
         
         <div className="space-y-16">
@@ -62,20 +66,26 @@ export function Services() {
             >
               <div className={index % 2 === 1 ? 'md:col-start-2' : ''}>
                 <div className="flex items-center mb-4">
-                  <div className="bg-blue-100 p-3 rounded-lg mr-4">
-                    <service.icon className="w-8 h-8 text-blue-600" />
+                  <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg mr-4">
+                    <service.icon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900">{service.title}</h3>
+                  <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{service.title}</h3>
                 </div>
-                <p className="text-lg text-gray-600 mb-6">{service.description}</p>
-                <ul className="space-y-3">
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">{service.description}</p>
+                <ul className="space-y-3 mb-6">
                   {service.features.map((feature) => (
                     <li key={feature} className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-1 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
+                      <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mr-3 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                     </li>
                   ))}
                 </ul>
+                <button
+                  onClick={onBookService}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md hover:shadow-lg"
+                >
+                  Book Now
+                </button>
               </div>
               
               <div className={index % 2 === 1 ? 'md:col-start-1 md:row-start-1' : ''}>

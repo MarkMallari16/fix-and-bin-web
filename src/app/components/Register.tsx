@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Lock, Mail, User, X, Briefcase, Zap, AlertCircle } from 'lucide-react';
+import { Lock, Mail, User, Briefcase, Zap, AlertCircle, X, Eye, EyeOff } from 'lucide-react';
 
 interface RegisterProps {
   onClose: () => void;
@@ -10,10 +10,14 @@ interface RegisterProps {
 export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'customer' | 'worker'>('customer');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [googleError, setGoogleError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register, loginWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,20 +25,35 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
     setIsLoading(true);
     setError('');
 
+    // Basic password validation
+    if (password.length < 6) {
+      setIsLoading(false);
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    // Password match validation
+    if (password !== confirmPassword) {
+      setIsLoading(false);
+      setError('Passwords do not match. Please try again.');
+      return;
+    }
+
     const success = await register(email, password, name, role);
-    
+
     setIsLoading(false);
-    
+
     if (success) {
       onClose();
     } else {
-      setError('Registration failed. Please try again or use a different email.');
+      setError('Registration failed. This email may already be registered. Try logging in instead.');
     }
   };
 
   const handleQuickDemo = async (demoRole: 'customer' | 'worker') => {
     setIsLoading(true);
     setError('');
+    setGoogleError(false);
 
     const demoEmail = demoRole === 'customer' ? 'demo@customer.com' : 'demo@worker.com';
     const demoName = demoRole === 'customer' ? 'Demo Customer' : 'Demo Worker';
@@ -51,95 +70,137 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      setGoogleError(false);
+      await loginWithGoogle();
+      // Don't set loading to false here - the page will redirect for OAuth
+      // If we reach here without redirect, something went wrong
+    } catch (err: any) {
+      setIsLoading(false);
+      setGoogleError(true);
+
+      // More specific error messages
+      let errorMsg = 'Google sign-in encountered an error. ';
+      if (err?.message?.includes('not enabled')) {
+        errorMsg += 'Google authentication is not configured. Please use email/password or demo registration.';
+      } else if (err?.message?.includes('redirect')) {
+        errorMsg += 'Redirect configuration issue. Please contact support or use email/password registration.';
+      } else {
+        errorMsg += 'Please try email/password registration or demo buttons below.';
+      }
+
+      setError(errorMsg);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden relative flex max-h-[90vh]">
-        {/* Background Image Section */}
-        <div 
-          className="hidden md:block md:w-1/2 bg-cover bg-center relative"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1760553120312-2821bf54e767?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBjb25zdHJ1Y3Rpb24lMjBibHVlcHJpbnQlMjB0b29sc3xlbnwxfHx8fDE3NzI3MDU5MDR8MA&ixlib=rb-4.1.0&q=80&w=1080')`
-          }}
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="w-full max-w-6xl flex flex-col lg:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden my-8 relative max-h-[90vh]">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors shadow-lg"
+          aria-label="Close"
         >
+          <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+        </button>
+          {/* Background Image Section */}
+          <div
+            className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
+            style={{
+              backgroundImage: `url('https://images.unsplash.com/photo-1760553120312-2821bf54e767?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBjb25zdHJ1Y3Rpb24lMjBibHVlcHJpbnQlMjB0b29sc3xlbnwxfHx8fDE3NzI3MDU5MDR8MA&ixlib=rb-4.1.0&q=80&w=1080')`
+            }}
+          >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-900/90"></div>
-          <div className="relative h-full flex flex-col justify-center items-center text-white p-8">
-            <h2 className="text-4xl font-bold mb-4">Join FIX&BIN</h2>
-            <p className="text-xl text-center mb-6">Your trusted handyman partner</p>
-            <div className="space-y-4">
+          <div className="relative h-full flex flex-col p-8 md:p-12 text-white">
+            {/* Logo at top left */}
+            <div className="mb-auto">
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">Join FIX&BIN</h2>
+              <p className="text-lg md:text-xl opacity-90">Your trusted handyman partner</p>
+            </div>
+
+            {/* Features in the middle */}
+            <div className="space-y-4 mb-auto">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <h3 className="font-bold mb-2">For Customers</h3>
+                <h3 className="font-bold mb-2 text-base">For Customers</h3>
                 <ul className="space-y-2 text-sm">
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full mr-2 mt-1.5"></div>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full mt-1.5 flex-shrink-0"></div>
                     <span>Book professional services</span>
                   </li>
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full mr-2 mt-1.5"></div>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full mt-1.5 flex-shrink-0"></div>
                     <span>Track your service requests</span>
                   </li>
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full mr-2 mt-1.5"></div>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full mt-1.5 flex-shrink-0"></div>
                     <span>Leave reviews & ratings</span>
                   </li>
                 </ul>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <h3 className="font-bold mb-2">For Workers</h3>
+                <h3 className="font-bold mb-2 text-base">For Workers</h3>
                 <ul className="space-y-2 text-sm">
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full mr-2 mt-1.5"></div>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full mt-1.5 flex-shrink-0"></div>
                     <span>Manage your job schedule</span>
                   </li>
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full mr-2 mt-1.5"></div>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full mt-1.5 flex-shrink-0"></div>
                     <span>Track job progress</span>
                   </li>
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full mr-2 mt-1.5"></div>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full mt-1.5 flex-shrink-0"></div>
                     <span>Build your reputation</span>
                   </li>
                 </ul>
               </div>
             </div>
+
+            {/* Footer text */}
+            <div className="text-sm opacity-75">
+              Join thousands of satisfied users across Metro Manila
+            </div>
           </div>
         </div>
 
         {/* Form Section */}
-        <div className="w-full md:w-1/2 p-8 relative overflow-y-auto">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
-          >
-            <X className="w-6 h-6" />
-          </button>
+        <div className="w-full lg:w-1/2 p-6 md:p-10 lg:p-12 overflow-y-auto max-h-screen">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-6 text-center">
+            <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400">FIX&BIN</h2>
+          </div>
 
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Join FIX&BIN</h2>
-            <p className="text-gray-600">Create your account to get started</p>
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h2>
+            <p className="text-gray-600 dark:text-gray-400">Join FIX&BIN today</p>
           </div>
 
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3.5 md:py-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-base transition-colors"
                   placeholder="John Doe"
                   required
                 />
@@ -147,17 +208,17 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3.5 md:py-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-base transition-colors"
                   placeholder="your@email.com"
                   required
                 />
@@ -165,27 +226,60 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  minLength={6}
+                  className="w-full pl-11 pr-12 py-3.5 md:py-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-base transition-colors"
                   placeholder="••••••••"
                   required
-                  minLength={6}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Must be at least 6 characters</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  className="w-full pl-11 pr-12 py-3.5 md:py-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-base transition-colors"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Account Type
               </label>
               <div className="grid grid-cols-2 gap-4">
@@ -194,13 +288,13 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
                   onClick={() => setRole('customer')}
                   className={`p-4 border-2 rounded-lg transition-all ${
                     role === 'customer'
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-300 hover:border-gray-400'
+                      ? 'border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                 >
-                  <User className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                  <div className="font-medium text-gray-900">Customer</div>
-                  <div className="text-xs text-gray-500">Book services</div>
+                  <User className="w-8 h-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+                  <div className="font-medium text-gray-900 dark:text-white">Customer</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Book services</div>
                 </button>
 
                 <button
@@ -208,13 +302,13 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
                   onClick={() => setRole('worker')}
                   className={`p-4 border-2 rounded-lg transition-all ${
                     role === 'worker'
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-300 hover:border-gray-400'
+                      ? 'border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                   }`}
                 >
-                  <Briefcase className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                  <div className="font-medium text-gray-900">Worker</div>
-                  <div className="text-xs text-gray-500">Provide services</div>
+                  <Briefcase className="w-8 h-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+                  <div className="font-medium text-gray-900 dark:text-white">Worker</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Provide services</div>
                 </button>
               </div>
             </div>
@@ -227,42 +321,6 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
-
-          {/* Google Signup Button */}
-          <button
-            onClick={loginWithGoogle}
-            className="mt-6 w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
-            <span className="font-medium">Continue with Google</span>
-          </button>
 
           {/* Quick Demo Buttons */}
           <div className="mt-6 text-center">
@@ -286,11 +344,11 @@ export function Register({ onClose, onSwitchToLogin }: RegisterProps) {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
               <button
                 onClick={onSwitchToLogin}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
               >
                 Log in
               </button>
